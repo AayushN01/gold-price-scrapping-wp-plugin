@@ -3,7 +3,7 @@
 Plugin Name: Gold Price Scraper
 Description: Scrapes gold prices from a website.
 Version: 1.0
-Author: Your Name
+Author: Aayush Niraula
 */
 
 register_activation_hook(__FILE__, 'gold_price_scraper_activate');
