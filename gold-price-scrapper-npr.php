@@ -6,7 +6,20 @@ Version: 1.0
 Author: Your Name
 */
 
-   function scrape_gold_price(){
+register_activation_hook(__FILE__, 'gold_price_scraper_activate');
+
+function gold_price_scraper_activate(){
+    schedule_gold_price_scraping(); 
+}
+
+register_deactivation_hook(__FILE__, 'gold_price_scraper_deactivate');
+
+function gold_price_scraper_deactivate()
+{
+    wp_clear_scheduled_hook('daily_gold_price_scraping');
+}
+
+function scrape_gold_price(){
             
     $url = 'https://www.goldpriceindia.com/nepal-gold-price.php';
 
@@ -42,17 +55,25 @@ Author: Your Name
         $numbers[] = $number;
     }
 
-    $price24KNPR = $numbers[0];
-    $price22KNPR = $numbers[1];  
+    return $numbers;
+    // $price24KNPR = $numbers[0];
+    // $price22KNPR = $numbers[1];  
     
-    echo "Numbers:\n";
-    print_r($numbers);
-    echo "Gold Price 24K (NPR) :" . $price24KNPR ."\n";
-    echo "Gold Price 22K (NPR) :" . $price22KNPR;
+    // echo "Numbers:\n";
+    // print_r($numbers);
+    // echo "Gold Price 24K (NPR) :" . $price24KNPR ."\n";
+    // echo "Gold Price 22K (NPR) :" . $price22KNPR;
     
 }
 
     // add_action('init', 'scrape_gold_prices');
+    function schedule_gold_price_scraping() {
+        if (!wp_next_scheduled('daily_gold_price_scraping')) {
+            wp_schedule_event(time(), 'daily', 'daily_gold_price_scraping');
+        }
+    }
+    add_action('wp', 'schedule_gold_price_scraping');
+    add_action('daily_gold_price_scraping', 'scrape_gold_price');
 
     
 ?>
