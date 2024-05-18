@@ -1,23 +1,25 @@
 <?php
 /*
-Plugin Name: Gold Price Scraper
+Plugin Name: Gold Price (NPR) Scraper
 Description: Scrapes gold prices from a website.
-Version: 1.0
+Version: 1.1
 Author: Aayush Niraula
 */
 
 register_activation_hook(__FILE__, 'gold_price_scraper_activate');
+register_deactivation_hook(__FILE__, 'gold_price_scraper_deactivate');
 
 function gold_price_scraper_activate(){
     schedule_gold_price_scraping(); 
 }
 
-register_deactivation_hook(__FILE__, 'gold_price_scraper_deactivate');
-
 function gold_price_scraper_deactivate()
 {
     wp_clear_scheduled_hook('daily_gold_price_scraping');
 }
+
+add_action('wp', 'schedule_gold_price_scraping');
+add_action('daily_gold_price_scraping', 'scrape_gold_price');
 
 function scrape_gold_price(){
             
@@ -55,6 +57,16 @@ function scrape_gold_price(){
         $numbers[] = $number;
     }
 
+    if (count($numbers) >= 2) {
+        $price24KNPR = $numbers[0];
+        $price22KNPR = $numbers[1];
+        update_option('gold_price_24k_npr', $price24KNPR);
+        update_option('gold_price_22k_npr', $price22KNPR);
+    } else {
+        error_log('Failed to scrape gold prices.');
+    }
+
+
     return $numbers;
     // $price24KNPR = $numbers[0];
     // $price22KNPR = $numbers[1];  
@@ -72,8 +84,7 @@ function scrape_gold_price(){
             wp_schedule_event(time(), 'daily', 'daily_gold_price_scraping');
         }
     }
-    add_action('wp', 'schedule_gold_price_scraping');
-    add_action('daily_gold_price_scraping', 'scrape_gold_price');
+
 
     
 ?>
