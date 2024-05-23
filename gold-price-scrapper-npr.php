@@ -2,7 +2,7 @@
 /*
 Plugin Name: Gold Price (NPR) Scraper
 Description: Scrapes gold prices from a website.
-Version: 1.1
+Version: 1.2
 Author: Aayush Niraula
 */
 
@@ -23,7 +23,7 @@ add_action('daily_gold_price_scraping', 'scrape_gold_price');
 
 function scrape_gold_price(){
             
-    $url = 'https://www.goldpriceindia.com/nepal-gold-price.php';
+    $url = 'https://www.fenegosida.org/rate-history.php';
 
     $curl = curl_init();
 
@@ -47,34 +47,31 @@ function scrape_gold_price(){
     // Create a DOMXPath object to query the DOM
     $xpath = new DOMXPath($dom);
     
-    $rows = $xpath->query('//td[contains(@class, "prc align-center pad-15")]');
+    $gold24K = $xpath->query('//div[@id="header-rate"]/div[@class="rate-gold post"][1]/p/b');
+    $gold22K = $xpath->query('//div[@id="header-rate"]/div[@class="rate-gold post"][2]/p/b');
+    $silver = $xpath->query('//div[@id="header-rate"]/div[@class="rate-silver post"]/p/b');
+    // print_r($gold22K->item(1)->nodeValue);
+    if ($gold24K->length > 0 && $gold22K->length > 0 && $silver->length > 0) {
+        $price24KGold = preg_replace('/[^0-9]/', '', $gold24K->item(1)->nodeValue);
+        $price22KGold = preg_replace('/[^0-9]/', '', $gold22K->item(1)->nodeValue);
+        $priceSilver = preg_replace('/[^0-9]/', '', $silver->item(1)->nodeValue);
 
-    $numbers = [];
-    
-    foreach ($rows as $row) {
-        $number = preg_replace('/[^0-9.]/', '', $row->nodeValue);
-        
-        $numbers[] = $number;
-    }
-
-    if (count($numbers) >= 2) {
-        $price24KNPR = $numbers[0];
-        $price22KNPR = $numbers[1];
-        update_option('gold_price_24k_npr', $price24KNPR);
-        update_option('gold_price_22k_npr', $price22KNPR);
+        update_option('gold_price_24k_npr', $price24KGold);
+        update_option('gold_price_22k_npr', $price24KGold);
+        update_option('silver_price', $priceSilver);
     } else {
-        error_log('Failed to scrape gold prices.');
+        error_log('Failed to scrape gold and silver prices.');
     }
-
+    
+    $numbers = [
+        'gold24Kprice' => $price24KGold,
+        'gold22Kprice' => $price22KGold,
+        'silverPrice' => $priceSilver
+    ];
+    
 
     return $numbers;
-    // $price24KNPR = $numbers[0];
-    // $price22KNPR = $numbers[1];  
-    
-    // echo "Numbers:\n";
-    // print_r($numbers);
-    // echo "Gold Price 24K (NPR) :" . $price24KNPR ."\n";
-    // echo "Gold Price 22K (NPR) :" . $price22KNPR;
+
     
 }
 
